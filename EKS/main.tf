@@ -26,8 +26,16 @@ data "aws_vpc" "existing_vpc" {
   id = "vpc-0ce00ce04a68a7fb4"
 }
 #get public subnets for cluster
-data "aws_subnet" "public" {
-  id = "subnet-05026fc631b7a6778"
+data "aws_subnets" "public" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.existing_vpc.id]
+  }
+
+  filter {
+    name   = "tag:Type"
+    values = ["Public"]  # Filter by the "Public" tag
+  }
 }
 #cluster provision
 resource "aws_eks_cluster" "example" {
@@ -35,7 +43,7 @@ resource "aws_eks_cluster" "example" {
   role_arn = aws_iam_role.example.arn
 
   vpc_config {
-    subnet_ids = [data.aws_subnet.public.id]
+    subnet_ids = [data.aws_subnets.public.ids]
   }
 
   # Ensure that IAM Role permissions are created before and deleted after EKS Cluster handling.
@@ -80,7 +88,7 @@ resource "aws_eks_node_group" "example" {
   cluster_name    = aws_eks_cluster.example.name
   node_group_name = "Node-cloud"
   node_role_arn   = aws_iam_role.example1.arn
-  subnet_ids      = [data.aws_subnet.public.id]
+  subnet_ids      = [data.aws_subnets.public.ids]
 
   scaling_config {
     desired_size = 1
