@@ -31,6 +31,10 @@ data "aws_subnets" "public" {
     name   = "vpc-id"
     values = [data.aws_vpc.existing_vpc.id]
   }
+ filter {
+    name   = "tag:Name"
+    values = ["my-subpub-01", "my-subpub-02"]  # Example tag values
+  }
 }
 #cluster provision
 resource "aws_eks_cluster" "example" {
